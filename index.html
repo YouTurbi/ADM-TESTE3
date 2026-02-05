@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
 
-  <link rel="shortcut icon" href="favicon_youturbi_2048.png" type="image/x-icon">
+   <link rel="shortcut icon" href="favicon_youturbi_2048.png" type="image/x-icon">
 
-
+  
   <title>Youturbi</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -139,7 +139,7 @@
   <div id="app" class="hidden">
     <h2>Youturbi🚀</h2>
 
-    <input id="yt" placeholder="Cole o link (YouTube, TikTok, Spotify, Instagram ou Facebook)">
+    <input id="yt" placeholder="Cole o link (YouTube, TikTok, Instagram, Facebook ou Spotify)">
     <button onclick="gerar()">Gerar link</button>
 
     <div class="result-box hidden" id="resultBox">
@@ -159,6 +159,16 @@
 </div>
 
 <script>
+/* ===== CORREÇÃO CRÍTICA ===== */
+const keyInput = document.getElementById("keyInput");
+const auth = document.getElementById("auth");
+const app = document.getElementById("app");
+const yt = document.getElementById("yt");
+const res = document.getElementById("res");
+const resultBox = document.getElementById("resultBox");
+const copied = document.getElementById("copied");
+/* ============================ */
+
 const ACCESS_KEY = "YT-UNLIM-2026-02";
 
 function ativar() {
@@ -174,7 +184,6 @@ function extrairInfo(url) {
   try {
     const u = new URL(url);
 
-    // YouTube
     if (u.hostname.includes("youtube.com") || u.hostname.includes("youtu.be")) {
       if (u.pathname.includes("/shorts/"))
         return { platform: "yt_shorts", id: u.pathname.split("/shorts/")[1] };
@@ -188,32 +197,25 @@ function extrairInfo(url) {
       return { platform: "yt_channel", path: u.pathname };
     }
 
-    // TikTok
     if (u.hostname.includes("tiktok.com")) {
       const match = u.pathname.match(/\/video\/(\d+)/);
-      if (match)
-        return { platform: "tiktok", id: match[1], fallback: u.href };
-
+      if (match) return { platform: "tiktok", id: match[1], fallback: u.href };
       return { platform: "tiktok", fallback: u.href };
     }
 
-    // Spotify
+    if (u.hostname.includes("instagram.com")) {
+      return { platform: "instagram", fallback: u.href };
+    }
+
+    if (u.hostname.includes("facebook.com") || u.hostname.includes("fb.watch")) {
+      return { platform: "facebook", fallback: u.href };
+    }
+
     if (u.hostname.includes("spotify.com")) {
       return { platform: "spotify", url: u.href };
     }
 
-    // Instagram
-    if (u.hostname.includes("instagram.com")) {
-      return { platform: "instagram", url: u.href };
-    }
-
-    // Facebook
-    if (u.hostname.includes("facebook.com") || u.hostname.includes("fb.watch")) {
-      return { platform: "facebook", url: u.href };
-    }
-
   } catch {}
-
   return null;
 }
 
@@ -241,7 +243,7 @@ function copiar() {
   copied.style.display = "block";
 }
 
-// Redirecionamento
+/* ===== REDIRECIONAMENTO ===== */
 const p = new URLSearchParams(location.search);
 const platform = p.get("platform");
 const id = p.get("id");
@@ -250,15 +252,19 @@ const url = p.get("url");
 const fallback = p.get("fallback");
 const ua = navigator.userAgent;
 
-// TikTok
-if (platform === "tiktok") {
-  if (id && /Android|iPhone|iPad/i.test(ua)) {
-    location.href = `snssdk1233://aweme/detail/${id}`;
-    setTimeout(() => location.href = fallback, 800);
+if (platform === "instagram" && fallback) {
+  if (/Android|iPhone|iPad/i.test(ua)) {
+    location.href = `instagram://app`;
+    setTimeout(() => location.href = fallback, 700);
   } else location.href = fallback;
 }
 
-// Spotify
+if (platform === "facebook" && fallback) {
+  if (/Android|iPhone|iPad/i.test(ua)) {
+    location.href = `fb://facewebmodal/f?href=${fallback}`;
+  } else location.href = fallback;
+}
+
 if (platform === "spotify" && url) {
   const clean = decodeURIComponent(url);
   if (/Android|iPhone|iPad/i.test(ua))
@@ -266,40 +272,6 @@ if (platform === "spotify" && url) {
   else location.href = clean;
 }
 
-// Instagram
-if (platform === "instagram" && url) {
-    const clean = decodeURIComponent(url);
-
-    if (/Android/i.test(ua)) {
-      // Tenta abrir direto no app do Instagram (Android)
-      location.href = `intent://${clean.replace("https://", "")}#Intent;package=com.instagram.android;scheme=https;end`;
-      setTimeout(() => {
-        location.href = clean;
-      }, 900);
-    }
-    else if (/iPhone|iPad|iPod/i.test(ua)) {
-      // Tenta abrir direto no app do Instagram (iOS)
-      location.href = `instagram://app`;
-      setTimeout(() => {
-        location.href = clean;
-      }, 900);
-    }
-    else {
-      location.href = clean;
-    }
-  } else location.href = clean;
-}
-
-// Facebook
-if (platform === "facebook" && url) {
-  const clean = decodeURIComponent(url);
-  if (/Android|iPhone|iPad/i.test(ua)) {
-    location.href = `fb://facewebmodal/f?href=${clean}`;
-    setTimeout(() => location.href = clean, 800);
-  } else location.href = clean;
-}
-
-// YouTube
 if (platform && platform.startsWith("yt")) {
   let finalUrl =
     platform === "yt_channel"
@@ -318,3 +290,5 @@ if (platform && platform.startsWith("yt")) {
 
 </body>
 </html>
+
+
